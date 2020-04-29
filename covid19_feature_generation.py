@@ -20,6 +20,7 @@ import lightgbm as lgb
 from sklearn.linear_model import Ridge
 from sklearn.externals import joblib
 from datetime import datetime
+import argparse
 # defining constants
 PATH_TRAIN = "/kaggle/input/covid19-global-forecasting-week-3/train.csv"
 PATH_TEST = "/kaggle/input/covid19-global-forecasting-week-3/test.csv"
@@ -34,18 +35,6 @@ VAL_DAYS = 7
 MAD_FACTOR = 0.5
 DAYS_SINCE_CASES = [1, 10, 50, 100, 500, 1000, 5000, 10000]
 
-SEED = 2357
-
-LGB_PARAMS = {"objective": "regression",
-              "num_leaves": 5,
-              "learning_rate": 0.013,
-              "bagging_fraction": 0.91,
-              "feature_fraction": 0.81,
-              "reg_alpha": 0.13,
-              "reg_lambda": 0.13,
-              "metric": "rmse",
-              "seed": SEED
-             }
 
 
 def rmsle(y, y_pred):
@@ -53,56 +42,7 @@ def rmsle(y, y_pred):
         terms_to_sum = [(math.log(y_pred[i] + 1) - math.log(y[i] + 1)) ** 2.0 for i,pred in enumerate(y_pred)]
         return (sum(terms_to_sum) * (1.0/len(y))) ** 0.5
     
-"""
-def fix_target(frame, key, target, new_target_name="target"):
-
-
-    corrections = 0
-    group_keys = frame[ key].values.tolist()
-    target = frame[target].values.tolist()
-
-    for i in range(1, len(group_keys) - 1):
-        previous_group = group_keys[i - 1]
-        current_group = group_keys[i]
-
-        previous_value = target[i - 1]
-        current_value = target[i]
-        if current_group == previous_group:
-                if current_value<previous_value:
-                    current_value=previous_value
-                    target[i] =current_value
-
-
-        target[i] =max(0,target[i] )#correct negative values
-
-    frame[new_target_name] = np.array(target)
-"""
-"""   
-def rate(frame, key, target, new_target_name="rate"):
-    import numpy as np
-
-
-    corrections = 0
-    group_keys = frame[ key].values.tolist()
-    target = frame[target].values.tolist()
-    rate=[1.0 for k in range (len(target))]
-
-    for i in range(1, len(group_keys) - 1):
-        previous_group = group_keys[i - 1]
-        current_group = group_keys[i]
-
-        previous_value = target[i - 1]
-        current_value = target[i]
-         
-        if current_group == previous_group:
-                if previous_value!=0.0:
-                     rate[i]=current_value/previous_value
-
-                 
-        rate[i] =max(1,rate[i] )#correct negative values
-
-    frame[new_target_name] = np.array(rate)
-"""    
+  
 def get_data_by_key(dataframe, key, key_value, fields=None):
     mini_frame=dataframe[dataframe[key]==key_value]
     if not fields is None:                
@@ -331,23 +271,10 @@ def build_predict_lgbm(df_train, df_test, gap):
     return y_pred_cc, y_pred_ft, model_cc, model_ft
 
 
-       
-
-
-if __name__ == "__main__":
-
-    st = time.time()
-    home_dir = "week4"
-    df_train = pd.read_csv(os.path.join(home_dir,"train.csv"))
-    print(df_train.columns)
-    
-    key_cols = ['Province_State', 'Country_Region']
-    old_key_cols = ['Province/State', 'Country/Region']
-    gf = processing(df_train,["ConfirmedCases","Fatalities"],key_cols)
+def initialize_features_func(start_fwd_looking,fwd_looking):
     funcs_dict = OrderedDict()
     funcs_dict["fatal2confirmed"] = {"func":fatal2confirmed,"params":{"col1":"Fatalities","col2":"ConfirmedCases"}}
-    start_fwd_looking = 27
-    fwd_looking =28
+    
     for ii in range (1,fwd_looking):
         funcs_dict["ConfirmedCases_ma_%d"%ii] = {"func":ma,"params" : {"col":"ConfirmedCases","window":ii}}
         funcs_dict["ConfirmedCases_std_%d"%ii] = {"func":std,"params" : {"col":"ConfirmedCases","window":ii}}
@@ -359,18 +286,75 @@ if __name__ == "__main__":
         funcs_dict["ConfirmedCases_cvt_%d"%ii] = {"func":local_cvt,"params" : {"col":"ConfirmedCases","back":ii}}
         funcs_dict["Fatalities_diff_%d"%ii] = {"func":diff,"params" : {"col":"Fatalities","back":ii}}
         funcs_dict["Fatalities_cvt_%d"%ii] = {"func":local_cvt,"params" : {"col":"Fatalities","back":ii}}
-
-       
-
-    for ii in range(1,10):
         funcs_dict["ConfirmedCases_lag_%d"%ii] = {"func":lag,"params" : {"col":"ConfirmedCases","lag":ii}}
         funcs_dict["Fatalities_lag_%d"%ii] = {"func":lag,"params" : {"col":"Fatalities","lag":ii}}
+    return funcs_dict
+
+
+def main_out(file_path,key_cols,cols_of_interest,start_fwd_looking,fwd_looking,output_file):
+    df_train = pd.read_csv(file_path)
+    gf = processing(df_train,cols_of_interest,key_cols)
+    funcs_dict = OrderedDict()
+    #funcs_dict["fatal2confirmed"] = {"func":fatal2confirmed,"params":{"col1":"Fatalities","col2":"ConfirmedCases"}}
+    
+    funcs_dict = initialize_features_func(start_fwd_looking,fwd_looking)
+    genetate_directional_features(df_train,gf,funcs_dict,"key",start_fwd_looking,fwd_looking)
+    df_train.to_csv(output_file,index = False)
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Interface to feature generation')
+    parser.add_argument('--TrainFile', dest='input_file',  help='<Required> The file destination if the input file')
+    parser.add_argument('--Dest', dest='dest_dir',  help='<Required> destination directory' )
+    args = parser.parse_args()
+    if args.dest_dir   :
+        print("dest_dir %s"%args.dest_dir )
+        
+    else:
+        print("ERROR !!! BAD INPUT ")
+        exit(0)
+    if not args.input_file:
+        args.input_file = os.path.join("week4","train.csv")
+    if not os.path.isdir(args.dest_dir):
+        os.mkdir(args.dest_dir)
     
 
+    st = time.time()
+    #file_path = os.path.join(home_dir,"train.csv")
+    key_cols =  ['Province_State', 'Country_Region']
+    cols_of_interest = ["ConfirmedCases","Fatalities"]
+    start_fwd_looking = 1
+    fwd_looking =2
+    output_file = os.path.join(args.dest_dir,"train_with_featuresNN_fwd_looking_%d.csv"%fwd_looking)
+
+    main_out(args.input_file,key_cols,cols_of_interest,start_fwd_looking,fwd_looking,output_file)
+    exit(0)
+    home_dir = "week4"
+    df_train = pd.read_csv(os.path.join(home_dir,"train.csv"))
+    print(df_train.columns)
+
+    file_path = os.path.join(home_dir,"train.csv")
+    key_cols =  ['Province_State', 'Country_Region']
+    cols_of_interest = ["ConfirmedCases","Fatalities"]
+    start_fwd_looking = 1
+    fwd_looking =2
+    output_file = "train_with_featuresNN_fwd_looking_%d.csv"%fwd_looking
+
+    main_out(file_path,key_cols,cols_of_interest,start_fwd_looking,fwd_looking,output_file)
+    exit(0)
+
+    
+    key_cols = ['Province_State', 'Country_Region']
+    old_key_cols = ['Province/State', 'Country/Region']
+    gf = processing(df_train,["ConfirmedCases","Fatalities"],key_cols)
+    funcs_dict = OrderedDict()
+    funcs_dict["fatal2confirmed"] = {"func":fatal2confirmed,"params":{"col1":"Fatalities","col2":"ConfirmedCases"}}
+    
+    
+    funcs_dict = initialize_features_func(start_fwd_looking,fwd_looking)
     genetate_directional_features(df_train,gf,funcs_dict,"key",start_fwd_looking,fwd_looking)
     
 
-    df_train.to_csv("train_with_features_fwd_looking_%d.csv"%fwd_looking,index = False)
+    df_train.to_csv("train_with_featuresN_fwd_looking_%d.csv"%fwd_looking,index = False)
     print("total running time is %0.2f"%(time.time() - st))
 
 	#train_model_lgbm(df_train,gap,subset)

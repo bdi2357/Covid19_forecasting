@@ -11,9 +11,9 @@ https://www.kaggle.com/c/covid19-global-forecasting-week-4/data
 
 ## Usage
 
-'''python
+```python
 import covid19
-'''
+```
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
