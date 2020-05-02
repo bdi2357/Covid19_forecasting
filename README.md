@@ -11,8 +11,10 @@ https://www.kaggle.com/c/covid19-global-forecasting-week-4/data
 
 ## Usage
 
-```python
-import covid19
+```
+python covid19_feature_generation.py --TrainFile /Users/itaybd/covid19/COVID-19/week4/train.csv --Dest ../out_Covid19_forecasing
+python Enreachment_Geo.py --TrainFile ../out_Covid19_forecasing/train_with_featuresNN_fwd_looking_2.csv --Dest ../out_Covid19_forecasing
+python covid19_fit.py  --TrainFile ../out_Covid19_forecasing/train_with_featuresNN_fwd_looking_2__1_ClosestCountries30.csv --Dest ../out_Covid19_forecasing/model
 ```
 
 ## Contributing
