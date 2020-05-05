@@ -1,6 +1,8 @@
 # Covid19_prediction
 
-Covid19_prediction offer predicing models for covid19 
+Covid19_prediction offer forecasting models for covid19 
+
+![Screenshot](covid19.jpeg)
 ## Installation
 
 git clone 
