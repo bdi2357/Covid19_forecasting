@@ -57,7 +57,7 @@ def get_all(features,gf,DF,nm,sep = "|"):
 		from_gf_to_df(DF,gf,col)
 
 def main_enreach(file_name,out_dir):
-	closest = pd.read_csv("closest.csv")
+	closest = pd.read_csv("closest2.csv")
 	print(closest.columns)
 	closest = closest.rename(columns = {'Unnamed: 0':'key'})
 	closest = closest.set_index('key')
