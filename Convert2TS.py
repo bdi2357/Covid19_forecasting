@@ -6,13 +6,15 @@
 
 import pandas as pd
 import os,re,sys
+from datetime import datetime
+today = datetime.now().strftime("%Y-%m-%d")
 dest_dir = "modified_covid19_ts" 
 if not os.path.isdir(dest_dir):
     os.mkdir(dest_dir)
 
 D = {"deaths":"Fatalities","confirmed":"ConfirmedCases"}
 for ky in D.keys():
-    df = pd.read_csv("csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_%s_global.csv"%ky)
+    df = pd.read_csv("/Users/itaybd/covid19/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_%s_global.csv"%ky)
 
 
 
@@ -96,8 +98,8 @@ def sp_dt(dt):
     else:
         d0=d[0]
     return "20"+d[2]+"-"+d0+"-"+d1
-merged_m["Date"] = mmn.apply(lambda r: sp_dt(r["Date"]),axis=1)
-merged_m.to_csv(os.path.join(dest_dir,"merged_global.csv"),index=False)
+merged_m["Date"] = merged_m.apply(lambda r: sp_dt(r["Date"]),axis=1)
+merged_m.to_csv(os.path.join(dest_dir,"merged_global%s.csv"%today),index=False)
 
 
 # In[ ]:
