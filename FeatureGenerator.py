@@ -15,11 +15,20 @@ start_all = time.time()
 # In[135]:
 #global dict_indexes #= OrderedDict()
 #global dict_indexes_rev #= OrderedDict()
+def add_st(s):
+    if len(s)==1:
+        return "0"+s
+    return s
+def convert_dates(dt):
+    spl = dt.split("/")
+    return spl[2]+"-"+add_st(spl[0])+"-"+add_st(spl[1])
+
 def create_covid_coutry_date_DataFrame(file_name,country_col = 'Country/Region',province_col= 'Province/State'):
     df = pd.read_csv(file_name)
     df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
     df = df.set_index("key")
     df_mod_t = df_mod.T
+    df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
     DF_countries = {c:pd.DataFrame(df_mod_t[c]) for c in df_mod_t.columns}
     return DF_countries
 
@@ -36,7 +45,7 @@ def prepare_covid(gf,column_rep,fix_index = False):
     df_all  = df_all.sort_index()
     L  = list(df_all.index.values)
     E = list(enumerate(L))
-    print("HERE"*30)
+    
     dict_indexes = {x[1]:x[0] for x in E}
     dict_indexes_rev = {x[0]:x[1] for x in E}
     df_all.index = [x[0] for x in E]
@@ -69,6 +78,7 @@ def create_df_dict(file_name,col_name,rep_indexes=False,dict_indexes={}):
     df = df.set_index("key")
     df_mod = df[df.columns[4:]]
     df_mod_t = df_mod.T
+    df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
     DF_countries = {c:pd.DataFrame(df_mod_t[c]) for c in df_mod_t.columns}
     for c in DF_countries.keys():
         DF_countries[c] = DF_countries[c].rename(columns={c:col_name})
@@ -216,7 +226,7 @@ print("total time %0.2f"%(time.time() - start_all))
 start3 = time.time()
 if not os.path.isdir("/Users/itaybd/output_covid"):
     os.mkdir("/Users/itaybd/output_covid")
-print(list(DF4.columns))
+
 
 DF4.to_csv("/Users/itaybd/output_covid/test_deaths_covid19.csv",index_label="index")
 print("save time %0.2f"%(time.time() - start3))
