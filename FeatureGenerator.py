@@ -22,6 +22,16 @@ def add_st(s):
     if len(s)==1:
         return "0"+s
     return s
+def convert_US(file_name):
+    df = pd.read_csv(file_name)
+    dfs = df.groupby("Province_State").sum()
+    out1 = pd.read_csv("/Users/itaybd/output_covid/test_deathsNconfirmed_covid19.csv",index_col="index")
+    dfs2 = dfs[list(dfs.columns[10:])]
+    df_mod_t = dfs2.T
+    df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
+    DF_countries = {c:pd.DataFrame(df_mod_t[c]) for c in df_mod_t.columns}
+    return DF_countries
+
 def convert_dates(dt):
     spl = dt.split("/")
     return spl[2]+"-"+add_st(spl[0])+"-"+add_st(spl[1])
@@ -31,7 +41,6 @@ def create_covid_coutry_date_DataFrame(file_name,country_col = 'Country/Region',
     df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
     df = df.set_index("key")
     df_mod = df[df.columns[start_col:]]
-    df_mod_t = df_mod.T
     df_mod_t = df_mod.T
     df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
     DF_countries = {c:pd.DataFrame(df_mod_t[c]) for c in df_mod_t.columns}
@@ -66,24 +75,29 @@ def prepare_covid(gf,column_rep,fix_index = False,add = 0):
 
 
 start = time.time()
+def dates_expr(d):
+    return len(re.findall('[0-9]+/[0-9]+/[0-9]+',d)) >0 and d == re.findall('[0-9]+/[0-9]+/[0-9]+',d)[0]
 def create_df_dict(file_name,col_name,country_col='Country/Region',province_col='Province/State',rep_indexes=False,dict_indexes={}):
     df = pd.read_csv(file_name)
     df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
-    df = df.set_index("key")
-    df_mod = df[df.columns[start_col:]]
+    #df1 = df.set_index("key")
+    df = df.groupby("key").sum()
+    date_cols = [c for c in df.columns if dates_expr(c)]   
+    df_mod = df[date_cols]
     df_mod_t = df_mod.T
     df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
     DF_countries = {c:pd.DataFrame(df_mod_t[c]) for c in df_mod_t.columns}
     for c in DF_countries.keys():
         DF_countries[c] = DF_countries[c].rename(columns={c:col_name})
         if col_name.find("daily") == -1:
-            print("col_name is %s"%col_name)
-            print(DF_countries[c][col_name].shape)
-            print(DF_countries[c][col_name].tail())
+            #print("col_name is %s"%col_name)
+            #print(DF_countries[c][col_name].shape)
+            #print(DF_countries[c][col_name].tail())
             DF_countries[c]["daily_"+col_name] = DF_countries[c][col_name].diff(1).fillna(0)
         DF_countries[c]["Date"] = DF_countries[c].index
         DF_countries[c]["Country_Province"] = c 
         if rep_indexes:
+            print(list(dict_indexes.keys())[-20:])
             DF_countries[c].index = DF_countries[c].apply(lambda r: dict_indexes[(c,r.name)],axis=1)
         else:
              DF_countries[c].index = DF_countries[c].apply(lambda r: (c,r.name),axis=1)
@@ -174,16 +188,20 @@ def genetate_directional_features(frame,gf,func_dict,lags,lags2):
 
 # In[148]:
 
-def main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar="deaths",add=0,country_col=country_col,province_col=province_col):
+def main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar="deaths",add=0,country_col=country_col,province_col=province_col,dict_indexes={}):
     daily_col = "daily_"+col_tar
     start = time.time()
-    DF_all = create_df_dict(file_name=file_name,col_name=col_name,country_col=country_col,province_col=province_col)
+    DF_all = create_df_dict(file_name=file_name,col_name=col_name,country_col=country_col,province_col=province_col,dict_indexes=dict_indexes)
     print(round(time.time()-start,2))
     start = time.time()
     functions_dict_deaths = initialize_features_func_directional(lags,daily_col)
     print(round(time.time()-start,2))
-    DF4,dict_indexes,dict_indexes_rev = prepare_covid(DF_all,col_tar,add)
+    print(list(DF_all.keys())[-10:])
+    #gf,column_rep,fix_index = False,add = 0
+    DF4,dict_indexes,dict_indexes_rev = prepare_covid(gf=DF_all,column_rep= col_tar,add=add)
     start = time.time()
+    print(">"*55)
+    print(list(dict_indexes.items())[-10:])
     DF_d = create_df_dict(file_name,col_name,country_col,province_col,True,dict_indexes)
     print(round(time.time()-start,2))
     start = time.time()
@@ -236,10 +254,12 @@ if not os.path.isdir(output_path):
     os.mkdir(output_path)
 
 
-DFC.to_csv(os.path.join(output_path,"test_deathsNconfirmed_covid19.csv"),index_label="index")
+DFC.to_csv(os.path.join(output_path,"test_deathsN3confirmed_covid19.csv"),index_label="index")
 print("save time %0.2f"%(time.time() - start3))
 
+
 add_covid = max(list(dict_indexes.values()))+1
+
 
 file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
 col_name = "deaths"
@@ -250,14 +270,15 @@ country_col = 'Country_Region'
 province_col= 'Province_State'
 
 
-DF7,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add = add_covid,country_col=country_col,province_col=province_col)
+
+DF7,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add = add_covid,country_col=country_col,province_col=province_col,dict_indexes=dict_indexes)
 file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
 col_name = "confirmed"
 lags = [1,7,14,28,56]
 lags2 = [7,14,28]
 col_tar = "confirmed"
 
-DF8,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add= add_covid,country_col=country_col,province_col=province_col)
+DF8,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add= add_covid,country_col=country_col,province_col=province_col,dict_indexes=dict_indexes)
 
 DF9 = DF8[[c for c in DF8.columns if not c in DF7.columns ]]
 
