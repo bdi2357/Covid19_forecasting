@@ -8,7 +8,7 @@ os.getcwd()
 
 start_all = time.time()
 
-orig_path = "/Users/itaybd/covid19/COVID-19/new_covid/COVID-19/"
+orig_path = "/Users/itaybd/test11/COVID-19/"
 
 file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 col_name = "deaths"

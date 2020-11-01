@@ -1,12 +1,15 @@
 import pandas as pd
 import os,sys,re
 import numpy as np
+import argparse
 from collections import OrderedDict
 os.getcwd()
 from datetime import datetime,date
 days_diff =2
 covid_data_path= "/Users/itaybd/covid19/COVID-19/new_covid/"
 test_path = "COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
+
+"https://github.com/CSSEGISandData/COVID-19.git"
 def dates_expr(d):
     return len(re.findall('[0-9]+/[0-9]+/[0-9]+',d)) >0 and d == re.findall('[0-9]+/[0-9]+/[0-9]+',d)[0]
 def add_st(s):
@@ -17,6 +20,7 @@ def convert_dates(dt):
     spl = dt.split("/")
     return spl[2]+"-"+add_st(spl[0])+"-"+add_st(spl[1])
 def check_data_git_rep(covid_data_path,test_path,git_path):
+    git_main = git_path.split("/")[-1].split(".")[0]
     dt1 = datetime.now().date()
     test_file_path = os.path.join(covid_data_path,test_path)
     if os.path.isfile(test_file_path):
@@ -30,7 +34,7 @@ def check_data_git_rep(covid_data_path,test_path,git_path):
         ldt= date( 2000 +int(spl[0]),int(spl[1]),int(spl[2]))
         if days_diff < ( (dt1-ldt).days):
             #os.system("cd %s"%os.path.join(covid_data_path,"COVID-19"))
-            os.chdir(os.path.join(covid_data_path,"COVID-19"))
+            os.chdir(os.path.join(covid_data_path,git_main))
             #print(os.getcwd())
             #print(os.listdir("."))
             os.system("git pull")
@@ -39,4 +43,36 @@ def check_data_git_rep(covid_data_path,test_path,git_path):
     else:
         os.chdir(covid_data_path)
         os.system("git clone %s"%git_path)
+
+
+if __name__ == "__main__":
+  """
+  parser = argparse.ArgumentParser(description='Interface to test git')
+  parser.add_argument('--data_path', dest='git_repo_local_path',  help='<Required> destination of local git data repo')
+  parser.add_argument('--git_repo', dest='git_repo_address',  help='<Required> destination directory' )
+  args = parser.parse_args()
+  if args.git_repo_local_path   :
+    print("dest_dir %s"%args.dest_dir )
+  else:
+    print("Error no git_repo_local_path input")ֿֿ
+    exit(0)
+  if args.git_repo_address   :
+    print("dest_dir %s"%args.git_repo_address )
+  else:
+    print("Error no git_repo_address input")ֿֿ
+    exit(0)
+  check_data_git_rep
+  """
+  covid_data_path = "../test11"
+  test_path = "COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
+
+  git_path = "https://github.com/CSSEGISandData/COVID-19.git"
+
+  check_data_git_rep(covid_data_path,test_path,git_path)
+
+  
+  
+      
+
+
     
