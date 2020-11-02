@@ -3,6 +3,7 @@ import os,sys,re
 import numpy as np
 import argparse
 from collections import OrderedDict
+from dateutil.parser import parse
 os.getcwd()
 from datetime import datetime,date
 days_diff =2
@@ -10,15 +11,22 @@ covid_data_path= "/Users/itaybd/covid19/COVID-19/new_covid/"
 test_path = "COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
 
 "https://github.com/CSSEGISandData/COVID-19.git"
+
+parse("2/5/2019", dayfirst=True)
 def dates_expr(d):
-    return len(re.findall('[0-9]+/[0-9]+/[0-9]+',d)) >0 and d == re.findall('[0-9]+/[0-9]+/[0-9]+',d)[0]
+    return len(re.findall('[0-9]+',d)) >=2
 def add_st(s):
     if len(s)==1:
         return "0"+s
     return s
+"""
 def convert_dates(dt):
     spl = dt.split("/")
     return spl[2]+"-"+add_st(spl[0])+"-"+add_st(spl[1])
+"""
+def convert_dates(dt):
+    spl = parse(dt,dayfirst=False)
+    return str(spl.year)+"-"+add_st(str(spl.month))+"-"+add_st(str(spl.day))
 def check_data_git_rep(covid_data_path,test_path,git_path):
     git_main = git_path.split("/")[-1].split(".")[0]
     dt1 = datetime.now().date()
@@ -31,7 +39,7 @@ def check_data_git_rep(covid_data_path,test_path,git_path):
         print(max(dates_cnvrtd))
         last_d = max(dates_cnvrtd)
         spl=last_d.split("-")
-        ldt= date( 2000 +int(spl[0]),int(spl[1]),int(spl[2]))
+        ldt= date( 2000 +(int(spl[0])%100),int(spl[1]),int(spl[2]))
         if days_diff < ( (dt1-ldt).days):
             #os.system("cd %s"%os.path.join(covid_data_path,"COVID-19"))
             os.chdir(os.path.join(covid_data_path,git_main))
@@ -63,13 +71,17 @@ if __name__ == "__main__":
     exit(0)
   check_data_git_rep
   """
-  covid_data_path = "../test11"
+  covid_data_path = ".."
   test_path = "COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
 
   git_path = "https://github.com/CSSEGISandData/COVID-19.git"
 
   check_data_git_rep(covid_data_path,test_path,git_path)
 
+  covid_data_path = ".."
+  git_path = "https://github.com/OxCGRT/covid-policy-tracker.git"
+  test_path ="covid-policy-tracker/data/timeseries/index_stringency.csv"
+  check_data_git_rep(covid_data_path, test_path, git_path)
   
   
       
