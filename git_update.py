@@ -49,7 +49,10 @@ def check_data_git_rep(covid_data_path,test_path,git_path):
         else:
             print("up2date")
     else:
+        print("HERE %s"%git_path)
+        print(covid_data_path)
         os.chdir(covid_data_path)
+
         os.system("git clone %s"%git_path)
 
 

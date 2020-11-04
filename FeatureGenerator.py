@@ -113,6 +113,8 @@ round(time.time()-start,2)
 
 # In[145]:
 
+#directional operators
+
 
 def lag(df,col,lag,fillna_val = 0.0):
 	return df[col].shift(lag).fillna(0.0)
@@ -130,7 +132,19 @@ def local_cvt(df,col,back):
     return df[col].diff(back).fillna(0.0) -df[col].shift(back).fillna(0.0).diff(back).fillna(0.0)
 
 
-# In[146]:
+#basic functions
+def minus(a,b):
+    return a-b
+def plus(a,b):
+    return a+b
+def divide(a,b):
+    return a/b
+def mul(a,b):
+    return a*b
+
+#df[m1+o["name"]+m2] = o["func"](df[m1].values,df[m2].values)
+operators_l=[]
+operators_l.append({"name": "_div_","func":divide})
 
 
 def initialize_features_func_directional(lags,col_name):
@@ -183,10 +197,27 @@ def genetate_directional_features(frame,gf,func_dict,lags,lags2):
                 #from_gf_to_df(frame,gf,func_name+"__%d"%lg)
             """
 
-            
+
+def feature_mixing(df, prefix1,prefix2, filter_strings1,filter_strings2,operators):
+    def list_comp_str(c,lst):
+        for st in lst:
+            if c.find(st)>-1:
+                return False
+        return True
+
+    mix1 = [c for c in df.columns if c.find(prefix1) != -1 and list_comp_str(filter_strings1)]
+    mix2 = [c for c in df.columns if c.find(prefix2) != -1 and list_comp_str(filter_strings2)]
+    for m1 in mix1:
+        for m2 in mix2:
+            for o in operators:
+                df[m1+o["name"]+m2] = o["func"](df[m1].values,df[m2].values)
 
 
-# In[148]:
+
+
+
+
+
 
 def main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar="deaths",add=0,country_col=country_col,province_col=province_col,dict_indexes={}):
     daily_col = "daily_"+col_tar
