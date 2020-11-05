@@ -48,7 +48,7 @@ def create_covid_coutry_date_DataFrame(file_name,country_col = 'Country/Region',
 
 
 
-def prepare_covid(gf,column_rep,fix_index = False,add = 0):
+def prepare_data_with_indexing(gf,column_rep,fix_index = False,add = 0):
     for k in gf.keys():
         gf[k] = gf[k].rename(columns={k:column_rep})
         #gf[k]["daily_"+column_rep] = gf[k][column_rep].diff(1).fillna(0)
@@ -205,13 +205,12 @@ def feature_mixing(df, prefix1,prefix2, filter_strings1,filter_strings2,operator
                 return False
         return True
 
-    mix1 = [c for c in df.columns if c.find(prefix1) != -1 and list_comp_str(filter_strings1)]
-    mix2 = [c for c in df.columns if c.find(prefix2) != -1 and list_comp_str(filter_strings2)]
+    mix1 = [c for c in df.columns if c[0:len(prefix1)] == prefix1 and list_comp_str(c,filter_strings1)]
+    mix2 = [c for c in df.columns if c[0:len(prefix2)] == prefix2 and list_comp_str(c,filter_strings2)]
     for m1 in mix1:
         for m2 in mix2:
             for o in operators:
                 df[m1+o["name"]+m2] = o["func"](df[m1].values,df[m2].values)
-
 
 
 
@@ -229,7 +228,7 @@ def main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,c
     print(round(time.time()-start,2))
     print(list(DF_all.keys())[-10:])
     #gf,column_rep,fix_index = False,add = 0
-    DF4,dict_indexes,dict_indexes_rev = prepare_covid(gf=DF_all,column_rep= col_tar,add=add)
+    DF4,dict_indexes,dict_indexes_rev = prepare_data_with_indexing(gf=DF_all,column_rep= col_tar,add=add)
     start = time.time()
     print(">"*55)
     print(list(dict_indexes.items())[-10:])
