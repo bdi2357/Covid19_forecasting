@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
 	DFC.to_csv(os.path.join(output_path,"test_deathsN4confirmed_covid19.csv"),index_label="index")
 	print("save time %0.2f"%(time.time() - start3))
-	exit(0)
+	
 
 	add_covid = max(list(dict_indexes.values()))+1
 
@@ -74,7 +74,50 @@ if __name__ == "__main__":
 
 	DFC_complete = pd.concat([DFC,DFC2],axis=0)
 
+
+
 	DFC_complete.to_csv(os.path.join(output_path,"test_deathsNconfirmed_covid19_wUS.csv"),index_label="index")
 
 
 	print("TOTAL including US %0.2f"%(time.time() - start_main))
+	#{k:v for k,v in dfn.groupby("Country_Province")}
+	gfn = OrderedDict([(k,v) for k,v in DFC_complete.groupby("Country_Province")])
+	dfn = DFC_complete 
+	start_t = time.time()
+	for k in gfn.keys():
+	    prefix1 = "daily_deaths_sum_7"
+	    prefix2 = "daily_confirmed_sum_7"
+	    filter_strings1 =[]
+	    filter_strings2 =[]
+	    operators = operators_l
+	    a_c =feature_mixing(gfn[k], prefix1,prefix2, filter_strings1,filter_strings2,operators)
+	print("a_c is : ",a_c)
+	print("calc features time is %0.2f"%(time.time()-start_t))
+	from_gf_to_df(dfn,gfn,a_c)
+
+	gfn = OrderedDict([(k,v) for k,v in dfn.groupby("Country_Province")])
+
+
+
+	for k in gfn.keys():
+		prefix1 = "daily_deaths_sum_28"
+		prefix2 = "daily_deaths_sum_28"
+		filter_strings1 =["lag_1","lag_28","lag_14"]
+		filter_strings2 =["lag_1","lag_7"]
+		operators = operators_l
+		a_c =feature_mixing(gfn[k], prefix1,prefix2, filter_strings1,filter_strings2,operators)
+	from_gf_to_df(dfn,gfn,a_c)
+	gfn = OrderedDict([(k,v) for k,v in dfn.groupby("Country_Province")])
+
+
+	for k in gfn.keys():
+		prefix1 = "daily_confirmed_sum_28"
+		prefix2 = "daily_confirmed_sum_28"
+		filter_strings1 =["lag_1","lag_28","lag_14"]
+		filter_strings2 =["lag_1","lag_7"]
+		operators = operators_l
+		a_c =feature_mixing(gfn[k], prefix1,prefix2, filter_strings1,filter_strings2,operators)
+	print("calc features time is %0.2f"%(time.time()-start_t))
+	from_gf_to_df(dfn,gfn,a_c)
+	dfn.to_csv(os.path.join(output_path,"test_feature_mixing_covid19_wUS.csv"),index_label="index")
+	print("TOTAL including feature mixing %0.2f"%(time.time() - start_main))

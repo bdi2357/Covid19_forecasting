@@ -193,6 +193,7 @@ def genetate_directional_features(frame,gf,func_dict,lags2):
 
 
 def feature_mixing(df, prefix1,prefix2, filter_strings1,filter_strings2,operators):
+    added_cols = []
     def list_comp_str(c,lst):
         for st in lst:
             if c.find(st)>-1:
@@ -205,8 +206,8 @@ def feature_mixing(df, prefix1,prefix2, filter_strings1,filter_strings2,operator
         for m2 in mix2:
             for o in operators:
                 df[m1+o["name"]+m2] = o["func"](df[m1].values,df[m2].values)
-
-
+                added_cols.append(m1+o["name"]+m2)
+    return added_cols
 
 
 
