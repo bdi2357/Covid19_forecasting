@@ -30,7 +30,7 @@ def convert_dates(dt):
     spl = parse(dt,dayfirst=False)
     return str(spl.year)+"-"+add_st(str(spl.month))+"-"+add_st(str(spl.day))
 
-
+"""
 def create_covid_coutry_date_DataFrame(file_name,country_col = 'Country/Region',province_col= 'Province/State'):
     df = pd.read_csv(file_name)
     df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
@@ -40,7 +40,7 @@ def create_covid_coutry_date_DataFrame(file_name,country_col = 'Country/Region',
     df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
     DF_countries = {c:pd.DataFrame(df_mod_t[c]) for c in df_mod_t.columns}
     return DF_countries
-
+"""
 
 
 def prepare_data_with_indexing(gf,column_rep,fix_index = False,add = 0):
@@ -72,9 +72,12 @@ def prepare_data_with_indexing(gf,column_rep,fix_index = False,add = 0):
 start = time.time()
 def dates_expr(d):
     return len(re.findall('[0-9]+/[0-9]+/[0-9]+',d)) >0 and d == re.findall('[0-9]+/[0-9]+/[0-9]+',d)[0]
-def create_df_dict(file_name,col_name,country_col='Country/Region',province_col='Province/State',rep_indexes=False,dict_indexes={}):
+#def create_df_dict(file_name,col_name,country_col='Country/Region',province_col='Province/State',rep_indexes=False,dict_indexes={}):
+def create_df_dict(file_name,col_name,key_cols,key_cols_func,rep_indexes=False,dict_indexes={}):
+
     df = pd.read_csv(file_name)
-    df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
+    #df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
+    df["key"] = df.apply(lambda r: key_cols_func(key_cols)(r),axis=1)
     #df1 = df.set_index("key")
     df = df.groupby("key").sum()
     date_cols = [c for c in df.columns if dates_expr(c)]   
@@ -214,11 +217,12 @@ def feature_mixing(df, prefix1,prefix2, filter_strings1,filter_strings2,operator
 
 
 #def main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar="deaths",add=0,country_col=country_col,province_col=province_col,dict_indexes={}):
-def main_generator(file_name,col_name,lags,lags2,col_tar,add,country_col,province_col,dict_indexes={}):
+#def main_generator(file_name,col_name,lags,lags2,col_tar,add,country_col,province_col,dict_indexes={}):
+def main_generator(file_name,col_name,lags,lags2,col_tar,add,key_cols,key_cols_func,dict_indexes={}):
 
     daily_col = "daily_"+col_tar
     start = time.time()
-    DF_all = create_df_dict(file_name=file_name,col_name=col_name,country_col=country_col,province_col=province_col,dict_indexes=dict_indexes)
+    DF_all = create_df_dict(file_name=file_name,col_name=col_name,key_cols=key_cols,key_cols_func=key_cols_func,dict_indexes=dict_indexes)
     print(round(time.time()-start,2))
     start = time.time()
     functions_dict_deaths = initialize_features_func_directional(lags,daily_col)
@@ -227,7 +231,9 @@ def main_generator(file_name,col_name,lags,lags2,col_tar,add,country_col,provinc
     #gf,column_rep,fix_index = False,add = 0
     DF4,dict_indexes,dict_indexes_rev = prepare_data_with_indexing(gf=DF_all,column_rep= col_tar,add=add)
     start = time.time()
-    DF_d = create_df_dict(file_name,col_name,country_col,province_col,True,dict_indexes)
+    #DF_d = create_df_dict(file_name,col_name,country_col,province_col,True,dict_indexes)
+    DF_d = create_df_dict(file_name,col_name,key_cols,key_cols_func,True,dict_indexes)
+
     print(round(time.time()-start,2))
     start = time.time()
     DF_d = add_lags(gf=DF_d,lags= lags,col_name = col_name)

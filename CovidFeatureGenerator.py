@@ -10,9 +10,19 @@ if __name__ == "__main__":
 	lags2 = [7,14,28]
 	col_tar = "deaths"
 	start_col = 12
-	country_col = 'Country/Region'
-	province_col= 'Province/State'
+	#country_col = 'Country/Region'
+	#province_col= 'Province/State'
+	key_cols = ['Country/Region','Province/State']
+	def c_func(cols):
+		#str(r[country_col])+("_"+str(r[province_col])).replace("_nan","")
+		def lm(r):
+			s = str(r[cols[0]])
+			for c in cols[1:]:
+				s+= "_"+str(r[c]).replace("_nan","")
+			return s
+		return lm
 
+	key_cols_func = c_func
 	start_main = time.time()
 	orig_path = "/Users/itaybd/covid19/COVID-19/new_covid/COVID-19/"
 
@@ -22,15 +32,17 @@ if __name__ == "__main__":
 	lags2 = [7,14,28]
 	col_tar = "deaths"
 	add=0
-	DF4,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,country_col=country_col,province_col=province_col)
+	#DF4,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,country_col=country_col,province_col=province_col)
+	DF4,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols,key_cols_func=key_cols_func)
+
 	file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 	col_name = "confirmed"
 	lags = [1,7,14,28,56]
 	lags2 = [7,14,28]
 	col_tar = "confirmed"
 
-	DF5,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,country_col=country_col,province_col=province_col)
-
+	DF5,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols,key_cols_func=key_cols_func)
+	exit(0)
 	DF6 = DF5[[c for c in DF5.columns if not c in DF4.columns ]]
 
 	DFC = pd.concat([DF4,DF6],axis=1)
