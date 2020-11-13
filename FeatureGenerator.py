@@ -71,26 +71,53 @@ def prepare_data_with_indexing(gf,column_rep,fix_index = False,add = 0):
 
 start = time.time()
 def dates_expr(d):
-    return len(re.findall('[0-9]+/[0-9]+/[0-9]+',d)) >0 and d == re.findall('[0-9]+/[0-9]+/[0-9]+',d)[0]
-#def create_df_dict(file_name,col_name,country_col='Country/Region',province_col='Province/State',rep_indexes=False,dict_indexes={}):
-def create_df_dict(file_name,col_name,key_cols,key_cols_func,rep_indexes=False,dict_indexes={}):
+    try: 
+        parse(d)
+        return True
 
+    except ValueError:
+        return False
+    return False
+    #return len(re.findall('[0-9]+/[0-9]+/[0-9]+',d)) >0 and d == re.findall('[0-9]+/[0-9]+/[0-9]+',d)[0]
+#def create_df_dict(file_name,col_name,country_col='Country/Region',province_col='Province/State',rep_indexes=False,dict_indexes={}):
+def prep_data(file_name,col_name,key_cols,key_cols_func):
+    df = pd.read_csv(file_name)
+    df["key"] = df.apply(lambda r: key_cols_func(key_cols)(r),axis=1)
+    df = df.groupby("key").sum()
+    date_cols = [c for c in df.columns if dates_expr(c)]  
+    df_mod = df[date_cols]
+    df_mod_t = df_mod.T
+    df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
+    return OrderedDict([ (c,pd.DataFrame(df_mod_t[c])) for c in df_mod_t.columns])
+
+
+def create_df_dict(file_name,col_name,key_cols,key_cols_func,rep_indexes=False,dict_indexes={}):
+    """
     df = pd.read_csv(file_name)
     #df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
     df["key"] = df.apply(lambda r: key_cols_func(key_cols)(r),axis=1)
     #df1 = df.set_index("key")
     df = df.groupby("key").sum()
-    date_cols = [c for c in df.columns if dates_expr(c)]   
+    date_cols = [c for c in df.columns if dates_expr(c)]  
+    print(date_cols[:10]) 
     df_mod = df[date_cols]
     df_mod_t = df_mod.T
     df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
     DF_countries = OrderedDict([ (c,pd.DataFrame(df_mod_t[c])) for c in df_mod_t.columns])
+    """
+    DF_countries = prep_data(file_name,col_name,key_cols,key_cols_func)
     for c in DF_countries.keys():
         DF_countries[c] = DF_countries[c].rename(columns={c:col_name})
         if col_name.find("daily") == -1:
             #print("col_name is %s"%col_name)
             #print(DF_countries[c][col_name].shape)
             #print(DF_countries[c][col_name].tail())
+            #print(c)
+            #print(col_name)
+            #print(DF_countries[c][col_name].head())
+            #print([s for s in set(DF_countries[c][col_name]) if isinstance(s,str)])
+            DF_countries[c][col_name] = DF_countries[c][col_name].replace('.','0.0')
+            DF_countries[c][col_name] = DF_countries[c][col_name].astype(float)
             DF_countries[c]["daily_"+col_name] = DF_countries[c][col_name].diff(1).fillna(0)
         DF_countries[c]["Date"] = DF_countries[c].index
         DF_countries[c]["Country_Province"] = c 

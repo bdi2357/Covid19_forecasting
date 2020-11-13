@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
 
 
-	DF7,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add = add_covid,key_cols=key_cols2,key_cols_func=key_cols_func,dict_indexes=dict_indexes)
+	DF7,dict_indexes2 = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add = add_covid,key_cols=key_cols2,key_cols_func=key_cols_func,dict_indexes=dict_indexes)
 	file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
 	col_name = "confirmed"
 	lags = [1,7,14,28,56]
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
 
 
-	DFC_complete.to_csv(os.path.join(output_path,"test_deathsNconfirmed_covid19_wUS.csv"),index_label="index")
+	DFC_complete.to_csv(os.path.join(output_path,"test_deathsNconfirmed_covid19_wUSN.csv"),index_label="index")
 
 
 	print("TOTAL including US %0.2f"%(time.time() - start_main))
@@ -133,5 +133,10 @@ if __name__ == "__main__":
 		a_c =feature_mixing(gfn[k], prefix1,prefix2, filter_strings1,filter_strings2,operators)
 	print("calc features time is %0.2f"%(time.time()-start_t))
 	from_gf_to_df(dfn,gfn,a_c)
-	dfn.to_csv(os.path.join(output_path,"test_feature_mixing_covid19_wUS2.csv"),index_label="index")
+	dfn.to_csv(os.path.join(output_path,"test_feature_mixing_covid19_wUSN2.csv"),index_label="index")
 	print("TOTAL including feature mixing %0.2f"%(time.time() - start_main))
+	#dict_indexes.update(**{str(k): v for k, v in dict_indexes2.items()})
+	for k in dict_indexes2.keys():
+		dict_indexes[k] = dict_indexes2[k]
+	DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
+	DF_ind.to_csv(os.path.join(output_path,"test_covid19_wUSN3_index.csv"),index=False)
