@@ -35,15 +35,15 @@ if __name__ == "__main__":
 	col_tar = "deaths"
 	add=0
 	#DF4,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,country_col=country_col,province_col=province_col)
-	DF4,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols,key_cols_func=key_cols_func)
-
+	DF4,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols,key_cols_func=key_cols_func,prep_data=prep_data_dt_cols)
+	
 	file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 	col_name = "confirmed"
 	lags = [1,7,14,28,56]
 	lags2 = [7,14,28]
 	col_tar = "confirmed"
 
-	DF5,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols,key_cols_func=key_cols_func)
+	DF5,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols,key_cols_func=key_cols_func,prep_data=prep_data_dt_cols)
 	
 	DF6 = DF5[[c for c in DF5.columns if not c in DF4.columns ]]
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 	    os.mkdir(output_path)
 
 
-	DFC.to_csv(os.path.join(output_path,"test_deathsN4confirmed_covid19.csv"),index_label="index")
+	DFC.to_csv(os.path.join(output_path,"test_deathsM4confirmed_covid19.csv"),index_label="index")
 	print("save time %0.2f"%(time.time() - start3))
 	
 
@@ -73,14 +73,14 @@ if __name__ == "__main__":
 
 
 
-	DF7,dict_indexes2 = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add = add_covid,key_cols=key_cols2,key_cols_func=key_cols_func,dict_indexes=dict_indexes)
+	DF7,dict_indexes2 = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add = add_covid,key_cols=key_cols2,key_cols_func=key_cols_func,dict_indexes=dict_indexes,prep_data=prep_data_dt_cols)
 	file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
 	col_name = "confirmed"
 	lags = [1,7,14,28,56]
 	lags2 = [7,14,28]
 	col_tar = "confirmed"
 
-	DF8,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add= add_covid,key_cols=key_cols2,key_cols_func=key_cols_func,dict_indexes=dict_indexes)
+	DF8,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add= add_covid,key_cols=key_cols2,key_cols_func=key_cols_func,dict_indexes=dict_indexes,prep_data=prep_data_dt_cols)
 
 	DF9 = DF8[[c for c in DF8.columns if not c in DF7.columns ]]
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
 
 
-	DFC_complete.to_csv(os.path.join(output_path,"test_deathsNconfirmed_covid19_wUSN.csv"),index_label="index")
+	DFC_complete.to_csv(os.path.join(output_path,"test_deathsNconfirmed_covid19_wUSM.csv"),index_label="index")
 
 
 	print("TOTAL including US %0.2f"%(time.time() - start_main))
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 		a_c =feature_mixing(gfn[k], prefix1,prefix2, filter_strings1,filter_strings2,operators)
 	print("calc features time is %0.2f"%(time.time()-start_t))
 	from_gf_to_df(dfn,gfn,a_c)
-	dfn.to_csv(os.path.join(output_path,"test_feature_mixing_covid19_wUSN2.csv"),index_label="index")
+	dfn.to_csv(os.path.join(output_path,"test_feature_mixing_covid19_wUSM2.csv"),index_label="index")
 	print("TOTAL including feature mixing %0.2f"%(time.time() - start_main))
 	#dict_indexes.update(**{str(k): v for k, v in dict_indexes2.items()})
 	for k in dict_indexes2.keys():
