@@ -152,6 +152,10 @@ def pct_change(df,col,back):
 	return df[col].pct_change(back).fillna(0.0)
 def diff(df,col,back):
     return df[col].diff(back).fillna(0.0)
+def mx(df,col,back):
+    return df[col].rolling(back).max()
+def mn(df,col,back):
+    return df[col].rolling(back).min()
 def local_cvt(df,col,back):
     return df[col].diff(back).fillna(0.0) -df[col].shift(back).fillna(0.0).diff(back).fillna(0.0)
 
@@ -245,7 +249,7 @@ def feature_mixing(df, prefix1,prefix2, filter_strings1,filter_strings2,operator
 
 #def main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar="deaths",add=0,country_col=country_col,province_col=province_col,dict_indexes={}):
 #def main_generator(file_name,col_name,lags,lags2,col_tar,add,country_col,province_col,dict_indexes={}):
-def main_generator(file_name,col_name,lags,lags2,col_tar,add,key_cols,key_cols_func,prep_data,dict_indexes={}):
+def main_generator(file_name,col_name,lags,lags2,col_tar,add,key_cols,key_cols_func,prep_data,dict_indexes={},initialize_features_func_directional=initialize_features_func_directional):
 
     daily_col = "daily_"+col_tar
     start = time.time()

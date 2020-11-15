@@ -3,241 +3,15 @@
 
 # In[2]:
 
-
+from FeatureGenerator import *
 import pandas as pd
 import re,os,sys
 from dateutil.parser import parse
 import time
 
 
-# In[3]:
 
-
-test_path ="../covid-policy-tracker/data/timeseries/index_stringency.csv"
-
-
-# In[4]:
-
-
-ds = pd.read_csv(test_path)
-
-
-# In[5]:
-
-
-ds.shape
-
-
-# In[6]:
-
-
-output_path = "/Users/itaybd/output_covid"
-df1 = pd.read_csv(os.path.join(output_path,"test_covid19_wUS2_index.csv"))
-df1.head()
-
-
-# In[7]:
-
-
-df2 = pd.read_csv((os.path.join(output_path,"test_stringency_index.csv")))
-df2.head()
-
-
-# In[8]:
-
-
-df2.shape,df1.shape
-
-
-# In[9]:
-
-
-d1 = df1.set_index("index")["val"].to_dict()
-d2 = df2.set_index("index")["val"].to_dict()
-d2k = set(d2.keys())
-d3 =[ k for k in d1.keys() if k in d2k]
-len(d3)
-
-
-# In[13]:
-
-
-Ax=(set([eval(x)[0] for x in d3]))
-len(Ax), list(Ax)[:10]
-
-
-# In[14]:
-
-
-import wikipedia
-
-
-# In[20]:
-
-
-t = wikipedia.page("OECD")
-
-
-# In[30]:
-
-
-oecd_c = pd.read_html(t.html())[5]
-
-
-# In[31]:
-
-
-L = list(oecd_c["Country"])
-
-
-# In[34]:
-
-
-Ax_oecd = [x for x in Ax if x in L]
-len(Ax_oecd)
-not_found = [x for x in L if not x in Ax]
-not_found
-
-
-# In[37]:
-
-
-A3=[]
-for t in not_found :
-    for x in Ax:
-        if x.find(t)>-1:
-            A3.append(x)
-A3
-
-
-# In[39]:
-
-
-Ax
-
-
-# In[42]:
-
-
-#d1 = df1.set_index("index")["val"].to_dict()
-#d2 = df2.set_index("index")["val"].to_dict()
-d1s = set([eval(k)[0] for k in d1.keys()])
-d2s = set([eval(k)[0] for k in d2.keys()])
-
-
-# In[43]:
-
-
-len(d1s),len(d2s)
-
-
-# In[44]:
-
-
-
-not_found = [x for x in L if not x in d1s]
-not_found
-
-
-# In[46]:
-
-
-A3=[]
-for t in not_found :
-    for x in d1s:
-        if x.find(t)>-1:
-            A3.append(x)
-A3
-
-
-# In[47]:
-
-
-os.listdir("../covid-policy-tracker/data")
-
-
-# In[48]:
-
-
-OxWorld = pd.read_csv("../covid-policy-tracker/data/OxCGRT_latest.csv")
-
-
-# In[49]:
-
-
-list(OxWorld.columns)
-
-
-# In[53]:
-
-
-#set (OxWorld['RegionName'].astype(str) )
-OxWorld[OxWorld['RegionName']=="Alabama"].shape
-
-
-# In[56]:
-
-
-def add_st(s):
-    if len(s)==1:
-        return "0"+s
-    return s
-def convert_dates(dt):
-    spl = parse(dt,dayfirst=False)
-    return str(spl.year)+"-"+add_st(str(spl.month))+"-"+add_st(str(spl.day))
-OxWorld["Date"] = OxWorld.apply(lambda r: convert_dates(str(r["Date"])),axis=1 )
-
-
-# In[57]:
-
-
-OxWorld["Date"].head()
-
-
-# In[61]:
-
-
-set(OxWorld["C2_Workplace closing"].astype(str))
-
-
-# In[66]:
-
-
-list(OxWorld["C2_Workplace closing"].astype(str)).count('nan')
-
-
-# In[91]:
-
-
-OxWorld2 = OxWorld[OxWorld["Date"]>"2020-03-01"]
-S1 = set(OxWorld2[OxWorld2.apply(lambda r: str(r["C2_Flag"]) !='nan',axis=1)]["CountryName"])
-S2 = set(OxWorld2["CountryName"])
-Germany = OxWorld2[OxWorld2["CountryName"]=="Germany"]
-len(S1),len(S2),(S2-S1)
-
-
-# In[100]:
-
-
-#Germany[Germany["C1_Flag"] =='nan'].shape
-Alabama = OxWorld2[OxWorld2["RegionName"]=="Alabama"]
-NewYork = OxWorld2[OxWorld2["RegionName"]=="New York"]
-Germany.head()
-
-
-# In[98]:
-
-
-Alabama.head()
-
-
-# In[101]:
-
-
-NewYork[50:].head()
-
-
-# In[112]:
+from collections import OrderedDict
 
 
 def c_func(cols):
@@ -250,85 +24,24 @@ def c_func(cols):
     return lm
 key_cols2 = ['CountryName','RegionName']
 key_cols_func = c_func
-OxWorld2["key"] = OxWorld2.apply(lambda r: key_cols_func(key_cols2)(r),axis=1)
-
-
-# In[113]:
-
-
-list(set(OxWorld2["key"]))[:20]
-
-
-# In[114]:
-
-
-A = set([eval(k)[0] for k in d1.keys()])
-
-
-# In[115]:
-
-
-B= set(OxWorld2["key"])
-len(A),len(B)
-
-
-# In[119]:
-
-
-intersect= A.intersection(B)
-len(intersect)
-
-
-# In[117]:
-
-
-list([x for x in B  if not x in A])
-
-
-# In[118]:
-
-
-list([x for x in A  if not x in B])
-
-
-# In[120]:
-
-
-list(intersect)[:10]
-
-
-# In[125]:
-
-
-[x for x in Ax_oecd if not x in intersect],len(Ax_oecd),len([x for x in intersect if x.find("US_")>-1])
-
-
-# In[126]:
-
-
-OxWG = {k:v for k,v in OxWorld2.groupby("key")}
-
-
-# In[127]:
-
-
-OxWG["Germany"].head()
-
-
-# In[147]:
-
-
-from collections import OrderedDict
 def prep_data_with_dt(file_name,col_name,key_cols,key_cols_func):
     df = pd.read_csv(file_name)
     #df.dropna(subset=["C1_School closing"],axis=0)
     df = df[df["C1_School closing"].astype(str)!="nan"]
-    df["Date"] = OxWorld.apply(lambda r: convert_dates(str(r["Date"])),axis=1 )
+    df["Date"] = df.apply(lambda r: convert_dates(str(r["Date"])),axis=1 )
     df = df.set_index("Date")
     df["key"] = df.apply(lambda r: key_cols_func(key_cols)(r),axis=1)
     return OrderedDict([(k,v) for k,v  in df.groupby("key")])
     
-    
+def initialize_features_func_directional2(lags,col_name):
+    funcs_dict = OrderedDict()# OrderedDict()    
+    for ii in lags:
+        funcs_dict["%s_diff_%d"%(col_name,ii)] = {"func":diff,"params" : {"col":col_name,"back":ii}}
+        funcs_dict["%s_max_%d"%(col_name,ii)] = {"func":mx,"params" : {"col":col_name,"back":ii}}
+        funcs_dict["%s_min_%d"%(col_name,ii)] = {"func":mn,"params" : {"col":col_name,"back":ii}}
+
+        
+    return funcs_dict
     
 
 
@@ -336,43 +49,76 @@ def prep_data_with_dt(file_name,col_name,key_cols,key_cols_func):
 
 
 file_name = "../covid-policy-tracker/data/OxCGRT_latest.csv"
-col_name =""
-OxWN = prep_data_with_dt(file_name,col_name,key_cols2,key_cols_func)
 
-
-# In[145]:
-
-
-OxWN["Israel"].shape
 
 
 # In[146]:
 
 
-from FeatureGenerator import *
+
 
 
 # In[150]:
 
 
 col_name = "C1_School closing"
-dct1= create_df_dict(file_name=file_name,col_name=col_name,key_cols=key_cols2,key_cols_func=key_cols_func,prep_data=prep_data_with_dt,rep_indexes=False,dict_indexes={})
+#dct1= create_df_dict(file_name=file_name,col_name=col_name,key_cols=key_cols2,key_cols_func=key_cols_func,prep_data=prep_data_with_dt,rep_indexes=False,dict_indexes={})
 
 
 # In[154]:
+cils =[
+ 'C1_School closing',
+ 'C2_Workplace closing',
+ 'C3_Cancel public events',
+ 'C4_Restrictions on gatherings',
+ 'C5_Close public transport',
+ 'C6_Stay at home requirements',
+ 'C7_Restrictions on internal movement',
+ 'C8_International travel controls',
+ 'H6_Facial Coverings',
+ 'H6_Flag',
+ 'StringencyIndex',
+ ]
 
-
+D_all = {}
+D_ind ={}
 lags = [1,7,14,28,56]
 lags2 = [7,14,28]
-col_tar = col_name
 add = 0
-DF4,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols2,key_cols_func=key_cols_func,prep_data=prep_data_with_dt)
+CLL = ['C1_School closing','C2_Workplace closing','C3_Cancel public events']
+for col_name in cils :
+    col_tar = col_name
+    D_all[col_name],D_ind[col_name] = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols2,key_cols_func=key_cols_func,prep_data=prep_data_with_dt,initialize_features_func_directional=initialize_features_func_directional2)
+intersect_all = set.intersection(*[set(x.keys()) for x in D_ind.values()])
 
+print("intersect_all len is: %d"%len(intersect_all)) 
+indexes = sorted([D_ind[cils[0]][k] for k in intersect_all])
+for col_name in cils :
+    D_all[col_name] = D_all[col_name].loc[indexes]
+DFC = pd.concat([D_all[col_name ] for col_name in cils ],axis=1)
+DFC = DFC.loc[:,~DFC.columns.duplicated()]
+"""
+S=[]
+for k in intersect_all:
+    A =[]
+    for c in cils:
+        A.append(D_ind[c][k])
+    if len(set(A))>1:
+        S.append(k)
+print("multiple indexes len is: %d"%len(S))
+"""
+dict_indexes = OrderedDict([(k,D_ind[cils[0]][k]) for k in intersect_all])
+#for col_name in 
+
+output_path = "/Users/itaybd/output_covid"
+DFC.to_csv(os.path.join(output_path,"test_stringency2.csv"),index_label="index")
+DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
+DF_ind.to_csv(os.path.join(output_path,"test_stringency_index2.csv"),index=False)
 
 # In[159]:
 
 
-DF4.tail()
+print(DF4.tail())
 
 
 # In[160]:
