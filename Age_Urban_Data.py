@@ -6,46 +6,53 @@
 
 import os,re
 import pandas as pd
-
-
-# In[74]:
-
-
-df_s = pd.read_csv("../output_covid/test_feature_mixing_covid19_wUS.csv")
-
-
-# In[75]:
-
-
-df_s.shape
-
-
-# In[76]:
-
-
 import wikipedia as wiki
 
 
-# In[77]:
+def get_age_data_world():
+    p = wiki.page("List_of_countries_by_age_structure")
+    df = pd.read_html(p.html())[0]
+    for c in df.columns[1:]:
+        df[c] = df.apply(lambda r: float(re.findall('[0-9]+\.[0-9]+',r[c])[0])*0.01,axis=1 )
+    age_c = df[[('Country','Country'), ('Population by age',  'Over 65[3]')]]
+    age_c.columns = ["Country_Province","Over 65 Ratio"]
+    return age_c
 
+def get_age_data_us(file_name):
+    state = pd.read_csv(file_name)
+    age_u = state[['State','Age.Percent 65 and Older']]
+    age_u['Age.Percent 65 and Older'] *= 0.01
+    age_u.columns = ["Country_Province","Over 65 Ratio"]
+    age_u['Country_Province'] = "US_" + age_u['Country_Province'] 
+    return age_u
 
-p = wiki.page("List_of_countries_by_age_structure")
+def get_urbanization_glob():    
+    u = wiki.page("Urbanization_by_country")
+    uf = pd.read_html(u.html())[0]
+    c = 'Urban Population (%)'
+    def to_val(s):
+        if len(re.findall('[0-9]+\.[0-9]+',str(s)))>0:
+            return float(re.findall('[0-9]+\.[0-9]+',str(s))[0])*0.01
+        else:
+            return 1.0
+        
+    uf[c] = uf.apply(lambda r: to_val(r[c]),axis=1 )
+    ufn = uf[["Nation",'Urban Population (%)']]
+    ufn.columns = ["Country_Province","Urban Population Ratio"]
+    return ufn
 
-
-# In[78]:
-
-
-df = pd.read_html(p.html())[0]
-for c in df.columns[1:]:
-    df[c] = df.apply(lambda r: float(re.findall('[0-9]+\.[0-9]+',r[c])[0])*0.01,axis=1 )
-df.columns
-
-
-# In[79]:
-
-
-df[[('Country','Country'), ('Population by age',  'Over 65[3]')]][:50]
-
+def get_urbanization_usa(): 
+    us = wiki.page("Urbanization_in_the_United_States")
+    usf2 = pd.read_html(us.html())[0]
+    usf2.columns = [x[1] for x in usf2.columns]
+    usf3 = usf2[5:][['State/Territory','2010']]
+    usf3['State'] = usf3.apply(lambda r: re.findall('[A-Za-z\ \-]+',r['State/Territory'])[0],axis=1)
+    usf3['State_us'] = "US_" + usf3['State']
+    usf4 = usf3[["State_us","2010"]]
+    c="2010"
+    usf4[c] = usf4.apply(lambda r: float(re.findall('[0-9]+\.[0-9]+',r[c])[0])*0.01,axis=1 )
+    usf4.columns = ["Country_Province","Urban Population Ratio"]
+    return usf4
 
 # In[80]:
 
@@ -221,8 +228,8 @@ cnct_all = pd.concat([cnct1_d,cnct2_d],axis=1)
 
 # In[131]:
 
-
-cnct_all.tail()
+print(cnct_all.head())
+print(cnct_all.tail())
 
 
 # In[ ]:
