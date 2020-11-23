@@ -14,6 +14,7 @@ import time
 from collections import OrderedDict
 
 # In[177]:
+start_all = time.time()
 
 
 strg = pd.read_csv("/Users/itaybd/output_covid/test_stringency2.csv",index_col="index")
@@ -83,9 +84,11 @@ complete = pd.concat([dc_f,strg_f],axis=1)
 complete = complete.loc[:,~complete.columns.duplicated()]
 complete.shape
 
+complete.to_csv("../output_covid/test_with_stringency.csv",index_label ="index")
 
 # In[206]:
 
+print("Total time : %0.2f"%(time.time()-start_all))
 
 print(len(set(strg_f.index.values)- set(dc_f.index.values)),len(set(dc_f.index.values)- set(strg_f.index.values)))
 
