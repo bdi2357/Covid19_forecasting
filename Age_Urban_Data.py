@@ -26,6 +26,11 @@ def get_age_data_us(file_name):
     age_u['Country_Province'] = "US_" + age_u['Country_Province'] 
     return age_u
 
+def create_age_unified_df(file_name):
+    return pd.concat([get_age_data_world(),get_age_data_us(file_name)])
+
+
+
 def get_urbanization_glob():    
     u = wiki.page("Urbanization_by_country")
     uf = pd.read_html(u.html())[0]
@@ -54,8 +59,47 @@ def get_urbanization_usa():
     usf4.columns = ["Country_Province","Urban Population Ratio"]
     return usf4
 
+def create_urban_unified_df():
+    return pd.concat([get_urbanization_glob(),get_urbanization_usa()])
+
+
+
+def concat_rel(cnct1,cnct2,key_col):
+    cnct1_d = cnct1.set_index(key_col)
+    cnct2_d = cnct2.set_index(key_col)
+    ix2 = set(cnct1_d.index.values).intersection(set(cnct2_d.index.values))
+    ix2 = sorted(list(ix2))
+    cnct1_d = cnct1_d.loc[ix2]
+    cnct2_d = cnct2_d.loc[ix2]
+    cnct2_d = cnct2_d[~cnct2_d.index.duplicated(keep='first')]
+    cnct1_d = cnct1_d.sort_index()
+    cnct2_d = cnct2_d.sort_index()
+    cnct1_d.shape,cnct2_d.shape,len(ix2),[x for x in cnct2_d.index.values if not  x in cnct1_d.index.values]
+    return pd.concat([cnct1_d,cnct2_d],axis=1)
+
+def create_urban_age_df(age_us_file_name,key_col):
+    return concat_rel(create_age_unified_df(age_us_file_name),create_urban_unified_df(),key_col)
+
+
+
+
+
+# In[129]:
+
+
+
+
+
 # In[80]:
 
+
+if __name__ == "__main__":
+    age_us_file_name = "/Users/itaybd/Documents/state_demographics.csv"
+    key_col = "Country_Province"
+    print(create_urban_age_df(age_us_file_name,key_col).tail())
+
+
+exit(0)
 
 state = pd.read_csv("/Users/itaybd/Documents/state_demographics.csv")
 state.columns
