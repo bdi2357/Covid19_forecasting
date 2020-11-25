@@ -7,7 +7,7 @@
 import os,re
 import pandas as pd
 import wikipedia as wiki
-
+import random
 
 def get_age_data_world():
     p = wiki.page("List_of_countries_by_age_structure")
@@ -80,6 +80,18 @@ def concat_rel(cnct1,cnct2,key_col):
 def create_urban_age_df(age_us_file_name,key_col):
     return concat_rel(create_age_unified_df(age_us_file_name),create_urban_unified_df(),key_col)
 
+def update_existing_df(cnct_all,dc,ind_dc,rel_cols):
+    s1 =set(cnct_all.index.values)
+    dict_cols = {}
+    for c in rel_cols:
+        dict_cols[c] = cnct_all[c].to_dict()
+    ind_dc_f = ind_dc[ind_dc.apply(lambda r:eval(r.name)[0] in s1,axis=1)]
+    dc = dc.loc[list(ind_dc_f["val"])]
+    for c in rel_cols:
+        print(c)
+        dc[c] = dc.apply(lambda r: dict_cols[c][r["Country_Province"]],axis=1)
+    return dc
+
 if __name__ == "__main__":
     age_us_file_name = "data/state_demographics.csv"
     key_col = "Country_Province"
@@ -88,6 +100,10 @@ if __name__ == "__main__":
     s1 =set(cnct_all.index.values)
     dc  = pd.read_csv("../output_covid/test_feature_mixing_covid19_wUSM2.csv",index_col="index")
     ind_dc = pd.read_csv("../output_covid/test_covid19_wUSN3_index.csv", index_col ="index")
+    dc = update_existing_df(cnct_all,dc,ind_dc,list(cnct_all.columns))
+    samp = random.sample(list(dc.index.values),10)
+    print(dc.loc[samp][["Country_Province"]+list(cnct_all.columns)])
+    exit(0)
     print("Country_Province" in dc.columns)
     print(ind_dc.shape)
     ind_dc_f = ind_dc[ind_dc.apply(lambda r:eval(r.name)[0] in s1,axis=1)]

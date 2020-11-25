@@ -17,6 +17,27 @@ from collections import OrderedDict
 start_all = time.time()
 
 
+def integrate_frames(strg,dc,ind_dc,ind_strg):
+    LL = (set(ind_dc.index.values).intersection(set(ind_strg.index.values)))
+    MM = sorted(list(LL))
+    ind_strng_d = ind_strg["val"].to_dict()
+    ind_dc_d = ind_dc["val"].to_dict()
+    reverse_d1 = {ind_strng_d[m]:m for m in MM}
+    new_ind_dict = {k:ind_dc_d[reverse_d1[k]] for k in reverse_d1.keys()}
+    S = set(new_ind_dict.keys())
+    S2 = set(new_ind_dict.values())
+    strg_f = strg[strg.apply(lambda r: r.name in S,axis =1)]
+    dc_f = dc[dc.apply(lambda r: r.name in S2,axis =1)]
+    dc_f.shape
+    strg_f["new index"] = strg_f.apply(lambda r: new_ind_dict[r.name] ,axis=1 )
+    strg_f = strg_f.set_index("new index")
+    strg_f = strg_f.sort_index()
+    dc_f = dc_f.sort_index()
+    complete = pd.concat([dc_f,strg_f],axis=1)
+    complete = complete.loc[:,~complete.columns.duplicated()]
+
+
+
 strg = pd.read_csv("/Users/itaybd/output_covid/test_stringency2.csv",index_col="index")
 
 
