@@ -80,23 +80,43 @@ def concat_rel(cnct1,cnct2,key_col):
 def create_urban_age_df(age_us_file_name,key_col):
     return concat_rel(create_age_unified_df(age_us_file_name),create_urban_unified_df(),key_col)
 
-
-
-
-
-# In[129]:
-
-
-
-
-
-# In[80]:
-
-
 if __name__ == "__main__":
-    age_us_file_name = "/Users/itaybd/Documents/state_demographics.csv"
+    age_us_file_name = "data/state_demographics.csv"
     key_col = "Country_Province"
-    print(create_urban_age_df(age_us_file_name,key_col).tail())
+    cnct_all =create_urban_age_df(age_us_file_name,key_col)
+    print(cnct_all.shape,cnct_all.columns)
+    s1 =set(cnct_all.index.values)
+    dc  = pd.read_csv("../output_covid/test_feature_mixing_covid19_wUSM2.csv",index_col="index")
+    ind_dc = pd.read_csv("../output_covid/test_covid19_wUSN3_index.csv", index_col ="index")
+    print("Country_Province" in dc.columns)
+    print(ind_dc.shape)
+    ind_dc_f = ind_dc[ind_dc.apply(lambda r:eval(r.name)[0] in s1,axis=1)]
+    print(ind_dc_f.shape)
+    print(len(set(ind_dc_f.apply(lambda r:eval(r.name)[0],axis=1))))
+    print("#"*150)
+
+    print(set(ind_dc_f.apply(lambda r:eval(r.name)[0],axis=1)))
+    d1 = cnct_all["Over 65 Ratio"].to_dict()
+    d2 = cnct_all["Urban Population Ratio"].to_dict()
+    print(ind_dc_f.columns)
+    dc = dc.loc[list(ind_dc_f["val"])]
+    dc["Over 65 Ratio"] = dc.apply(lambda r: d1[r["Country_Province"]],axis=1)
+
+    print(dc[["Country_Province","Over 65 Ratio"]].tail())
+    """
+    countries_l = set(ind_dc.apply(lambda r: eval(r.name)[0],axis=1))
+    cnct_all = cnct_all[cnct_all.apply(lambda r: r[key_col] in countries_l,axis=1)]
+    cnct_all_rel =  list(cnct_all[key_col])
+
+    ind_dc["Country_Province"] = ind_dc.apply(lambda r: eval(r.name)[0],axis=1)
+    """
+
+
+
+# In[182]:
+
+
+
 
 
 exit(0)

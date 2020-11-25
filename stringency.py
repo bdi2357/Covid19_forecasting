@@ -90,13 +90,15 @@ complete.to_csv("../output_covid/test_with_stringency.csv",index_label ="index")
 
 print("Total time : %0.2f"%(time.time()-start_all))
 
+print(complete.shape)
+
 print(len(set(strg_f.index.values)- set(dc_f.index.values)),len(set(dc_f.index.values)- set(strg_f.index.values)))
 
 
 # In[207]:
 
 
-print(list(complete.columns))
+#print(list(complete.columns))
 
 
 # In[ ]:
