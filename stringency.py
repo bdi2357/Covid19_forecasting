@@ -17,11 +17,12 @@ from collections import OrderedDict
 start_all = time.time()
 
 
-def integrate_frames(strg,dc,ind_dc,ind_strg):
+def integrate_frames(strg,ind_strg,dc,ind_dc):
     LL = (set(ind_dc.index.values).intersection(set(ind_strg.index.values)))
     MM = sorted(list(LL))
     ind_strng_d = ind_strg["val"].to_dict()
     ind_dc_d = ind_dc["val"].to_dict()
+    ind_dc_reverse = {ind_dc_d[k]: k for k in ind_dc_d.keys()}
     reverse_d1 = {ind_strng_d[m]:m for m in MM}
     new_ind_dict = {k:ind_dc_d[reverse_d1[k]] for k in reverse_d1.keys()}
     S = set(new_ind_dict.keys())
@@ -34,28 +35,25 @@ def integrate_frames(strg,dc,ind_dc,ind_strg):
     strg_f = strg_f.sort_index()
     dc_f = dc_f.sort_index()
     complete = pd.concat([dc_f,strg_f],axis=1)
-    complete = complete.loc[:,~complete.columns.duplicated()]
+    new_d = {ind_dc_reverse[k]: k for k in complete.index.values}
+    DF_ind = pd.DataFrame(list(new_d.items()),columns=["index","val"])
+    return complete.loc[:,~complete.columns.duplicated()],DF_ind
 
-
-
-strg = pd.read_csv("/Users/itaybd/output_covid/test_stringency2.csv",index_col="index")
-
-
-# In[181]:
-
-
-dc  = pd.read_csv("../output_covid/test_feature_mixing_covid19_wUSM2.csv",index_col="index")
-
-
-# In[182]:
-
-
-ind_dc = pd.read_csv("../output_covid/test_covid19_wUSN3_index.csv", index_col ="index")
-ind_strg = pd.read_csv("../output_covid/test_stringency_index2.csv",index_col = "index")
-
-
+if __name__ == "__main__":
+    start = time.time()
+    strg = pd.read_csv("/Users/itaybd/output_covid/test_stringency2.csv",index_col="index")
+    dc  = pd.read_csv("../output_covid/test_feature_mixing_covid19_wUSM2.csv",index_col="index")
+    ind_dc = pd.read_csv("../output_covid/test_covid19_wUSN3_index.csv", index_col ="index")
+    ind_strg = pd.read_csv("../output_covid/test_stringency_index2.csv",index_col = "index")
+    print("download time is %0.2f" %(time.time()-start))
+    integ_st = time.time()
+    c,d = integrate_frames(strg,ind_strg,dc,ind_dc)
+    print(c.shape)
+    print("integrate_frames time is %0.2f" %(time.time()-integ_st))
+    exit(0)
 # In[184]:
-
+"""
+exit(0)
 
 ind_dc.shape,ind_strg.shape
 
@@ -124,6 +122,6 @@ print(len(set(strg_f.index.values)- set(dc_f.index.values)),len(set(dc_f.index.v
 
 # In[ ]:
 
-
+"""
 
 
