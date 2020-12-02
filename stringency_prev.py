@@ -48,21 +48,8 @@ def initialize_features_func_directional2(lags,col_name):
 # In[148]:
 
 
-file_name = "../covid-policy-tracker/data/OxCGRT_latest.csv"
 
 
-
-# In[146]:
-
-
-
-
-
-# In[150]:
-
-
-col_name = "C1_School closing"
-#dct1= create_df_dict(file_name=file_name,col_name=col_name,key_cols=key_cols2,key_cols_func=key_cols_func,prep_data=prep_data_with_dt,rep_indexes=False,dict_indexes={})
 
 
 # In[154]:
@@ -80,55 +67,40 @@ cils =[
  'StringencyIndex',
  ]
 
-D_all = {}
-D_ind ={}
-lags = [1,7,14,28,56]
-lags2 = [7,14,28]
-add = 0
-CLL = ['C1_School closing','C2_Workplace closing','C3_Cancel public events']
-for col_name in cils :
-    col_tar = col_name
-    D_all[col_name],D_ind[col_name] = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols2,key_cols_func=key_cols_func,prep_data=prep_data_with_dt,initialize_features_func_directional=initialize_features_func_directional2)
-intersect_all = set.intersection(*[set(x.keys()) for x in D_ind.values()])
+def create_stringency_features(file_name,output_path,stringency_out_name):
+    D_all = {}
+    D_ind ={}
+    lags = [1,7,14,28,56]
+    lags2 = [7,14,28]
+    add = 0
+    for col_name in cils :
+        col_tar = col_name
+        D_all[col_name],D_ind[col_name] = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols2,key_cols_func=key_cols_func,prep_data=prep_data_with_dt,initialize_features_func_directional=initialize_features_func_directional2)
+    intersect_all = set.intersection(*[set(x.keys()) for x in D_ind.values()])
 
-print("intersect_all len is: %d"%len(intersect_all)) 
-indexes = sorted([D_ind[cils[0]][k] for k in intersect_all])
-for col_name in cils :
-    D_all[col_name] = D_all[col_name].loc[indexes]
-DFC = pd.concat([D_all[col_name ] for col_name in cils ],axis=1)
-DFC = DFC.loc[:,~DFC.columns.duplicated()]
-"""
-S=[]
-for k in intersect_all:
-    A =[]
-    for c in cils:
-        A.append(D_ind[c][k])
-    if len(set(A))>1:
-        S.append(k)
-print("multiple indexes len is: %d"%len(S))
-"""
-dict_indexes = OrderedDict([(k,D_ind[cils[0]][k]) for k in intersect_all])
-#for col_name in 
+    print("intersect_all len is: %d"%len(intersect_all)) 
+    indexes = sorted([D_ind[cils[0]][k] for k in intersect_all])
+    for col_name in cils :
+        D_all[col_name] = D_all[col_name].loc[indexes]
+    DFC = pd.concat([D_all[col_name ] for col_name in cils ],axis=1)
+    DFC = DFC.loc[:,~DFC.columns.duplicated()]
+    
+    dict_indexes = OrderedDict([(k,D_ind[cils[0]][k]) for k in intersect_all])
+    #for col_name in 
 
-output_path = "/Users/itaybd/output_covid"
-DFC.to_csv(os.path.join(output_path,"test_stringency2.csv"),index_label="index")
-DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
-DF_ind.to_csv(os.path.join(output_path,"test_stringency_index2.csv"),index=False)
-
-# In[159]:
+    output_path = "/Users/itaybd/output_covid"
+    DFC.to_csv(os.path.join(output_path,file_name+".csv"),index_label="index")
+    DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
+    DF_ind.to_csv(os.path.join(output_path,file_name+"_index.csv"),index=False)
 
 
-print(DF4.tail())
-
-
-# In[160]:
-
-
-list(dict_indexes.keys())[2500:2510]
-
-
-# In[ ]:
-
+if __name__ == "__main__" :
+    start_stringency_features = time.time()
+    file_name = "../covid-policy-tracker/data/OxCGRT_latest.csv"
+    stringency_out_name = "test_stringency2"
+    output_path = "/Users/itaybd/output_covid"
+    create_stringency_features(file_name,output_path,stringency_out_name)
+    print("total stringency_features %0.2f"%(time.time() - start_stringency_features))
 
 
 
