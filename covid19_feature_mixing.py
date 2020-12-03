@@ -1,5 +1,12 @@
+import pandas as pd
+import os,sys,re
+import numpy as np
+from collections import OrderedDict
+import random,time
+from dateutil.parser import parse
+from FeatureGenerator import *
 
-def covid_19_feature_mixing(DFC_complete,operators_l,prefix1,prefix2,groupby_column = "Country_Province"):	
+def covid_19_feature_mixing(DFC_complete,operators,prefix1,prefix2,filter_strings1,filter_strings2,groupby_column = "Country_Province"):	
 	gfn = OrderedDict([(k,v) for k,v in DFC_complete.groupby(groupby_column)])
 	dfn = DFC_complete 
 	start_t = time.time()
@@ -7,12 +14,19 @@ def covid_19_feature_mixing(DFC_complete,operators_l,prefix1,prefix2,groupby_col
 	    
 	    filter_strings1 =[]
 	    filter_strings2 =[]
-	    operators = operators_l
-	    a_c =feature_mixing(gfn[k], prefix1,prefix2, filter_strings1,filter_strings2,operators)
+	    operators = operators
+	    a_c =feature_mixing(gfn[k], prefix1,prefix2, filter_strings1,filter_strings1,operators)
 	print("a_c is : ",a_c)
 	print("calc features time is %0.2f"%(time.time()-start_t))
 	from_gf_to_df(dfn,gfn,a_c)
 	return dfn
+def extd_feature_mixing(DFC_complete,varbs):
+	for params in varbs:
+		DFC_complete = covid_19_feature_mixing(DFC_complete,**params)
+	return DFC_complete
+
+
+
 
 
 

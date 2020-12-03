@@ -1,4 +1,5 @@
 from FeatureGenerator import *
+from covid19_feature_mixing import *
 if __name__ == "__main__":
 	start_all = time.time()
 	def c_func(cols):
@@ -75,6 +76,32 @@ if __name__ == "__main__":
 
 
 	print("TOTAL including US %0.2f"%(time.time() - start_main))
+
+	
+	varbs = []
+	varbs.append( {"prefix1": "daily_deaths_sum_7",
+	    "prefix2": "daily_confirmed_sum_7",
+	    "filter_strings1":[],
+	    "filter_strings2":[],
+	    "operators": operators_l,
+	    "groupby_column": "Country_Province"}
+	    )
+	varbs.append( {"prefix1": "daily_deaths_sum_7",
+	    "prefix2": "daily_confirmed_sum_7",
+	    "filter_strings1":[],
+	    "filter_strings2":[],
+	    "operators": operators_l,
+	    "groupby_column": "Country_Province"}
+	    )
+	varbs.append( {"prefix1": "daily_deaths_sum_7",
+	    "prefix2": "daily_confirmed_sum_7",
+	    "filter_strings1":[],
+	    "filter_strings2":[],
+	    "operators": operators_l,
+	    "groupby_column": "Country_Province"}
+	    )
+	extd_feature_mixing(DFC_complete,varbs)
+
 
 	exit(0)
 	########################################################################################	
@@ -174,6 +201,8 @@ if __name__ == "__main__":
 
 	print("TOTAL including US %0.2f"%(time.time() - start_main))
 	#{k:v for k,v in dfn.groupby("Country_Province")}
+	### features mixing
+	
 	gfn = OrderedDict([(k,v) for k,v in DFC_complete.groupby("Country_Province")])
 	dfn = DFC_complete 
 	start_t = time.time()
