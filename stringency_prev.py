@@ -92,6 +92,7 @@ def create_stringency_features(file_name,output_path,stringency_out_name):
     DFC.to_csv(os.path.join(output_path,file_name+".csv"),index_label="index")
     DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
     DF_ind.to_csv(os.path.join(output_path,file_name+"_index.csv"),index=False)
+    return DFC,DF_ind
 
 
 if __name__ == "__main__" :

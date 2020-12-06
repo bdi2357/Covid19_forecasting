@@ -1,6 +1,6 @@
 from FeatureGenerator import *
 from covid19_feature_mixing import *
-if __name__ == "__main__":
+def main_CovidFeatureGen():
 	start_all = time.time()
 	def c_func(cols):
 		#str(r[country_col])+("_"+str(r[province_col])).replace("_nan","")
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 	if not os.path.isdir(output_path):
 	    os.mkdir(output_path)
 
-
+	DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
 	DFC.to_csv(os.path.join(output_path,"test_deathsM4confirmed_covid19.csv"),index_label="index")
 	print("save time %0.2f"%(time.time() - start3))
 	###########################################################################
@@ -100,12 +100,15 @@ if __name__ == "__main__":
 	    "operators": operators_l,
 	    "groupby_column": "Country_Province"}
 	    )
-	extd_feature_mixing(DFC_complete,varbs)
+	DF_ind = pd.DataFrame(list(dict_indexes2.items()),columns=["index","val"])
+
+	return extd_feature_mixing(DFC_complete,varbs),DF_ind
 
 
-	exit(0)
+	
 	########################################################################################	
-
+if __name__ == "__main__":
+	exit(0)
 
 
 	orig_path = "/Users/itaybd/test11/COVID-19/"

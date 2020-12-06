@@ -112,8 +112,6 @@ if __name__ == "__main__":
     cnct_all =create_urban_age_df(age_us_file_name,key_col)
     print(cnct_all.shape,cnct_all.columns)
     s1 =set(cnct_all.index.values)
-    #dc  = pd.read_csv("../output_covid/test_feature_mixing_covid19_wUSM2.csv",index_col="index")
-    #ind_dc = pd.read_csv("../output_covid/test_covid19_wUSN3_index.csv", index_col ="index")
     dc = update_existing_df(cnct_all,dc,ind_dc,list(cnct_all.columns))
     samp = random.sample(list(dc.index.values),10)
     print(dc.loc[samp][["Country_Province"]+list(cnct_all.columns)])
