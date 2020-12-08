@@ -1,6 +1,16 @@
 from FeatureGenerator import *
 from covid19_feature_mixing import *
-def main_CovidFeatureGen():
+import git
+from pathlib import Path
+import inspect
+HOME = str(Path.home())
+def last_git_commit_date():
+	repo = git.Repo(".")
+	commit = repo.head.commit 
+	return commit.committed_datetime.strftime("%Y-%m-%d")
+def main_CovidFeatureGen(covid_path,output_path = os.path.join(HOME,"output_covid") ):
+	if not os.path.isdir(output_path):
+		os.mkdir(output_path)
 	start_all = time.time()
 	def c_func(cols):
 		#str(r[country_col])+("_"+str(r[province_col])).replace("_nan","")
@@ -17,15 +27,18 @@ def main_CovidFeatureGen():
 	key_cols = ['Country/Region','Province/State']
 	key_cols2 = ['Country_Region','Province_State']
 	start_main = time.time()
-	orig_path = "/Users/itaybd/covid19/COVID-19/new_covid/COVID-19/"
-	file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
+	orig_path = covid_path #"/Users/itaybd/covid19/COVID-19/new_covid/COVID-19/"
+	file_name = os.path.join(orig_path,"csse_covid_19_data","csse_covid_19_time_series","time_series_covid19_deaths_global.csv")
 	col_name = "deaths"
 	lags = [1,7,14,28,56]
 	lags2 = [7,14,28]
 	col_tar = "deaths"
 	add=0
 	DF4,dict_indexes = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols,key_cols_func=key_cols_func,prep_data=prep_data_dt_cols)
-	file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+	
+	last_data_date = max(list(dict_indexes.keys()))[1]
+	git_commit_date = last_git_commit_date()
+	file_name = os.path.join(orig_path,"csse_covid_19_data","csse_covid_19_time_series","time_series_covid19_confirmed_global.csv")
 	col_name = "confirmed"
 	col_tar = "confirmed"
 	DF5,_ = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add=add,key_cols=key_cols,key_cols_func=key_cols_func,prep_data=prep_data_dt_cols)
@@ -35,19 +48,19 @@ def main_CovidFeatureGen():
 
 	print("total time %0.2f"%(time.time() - start_all))
 	start3 = time.time()
-	output_path = "/Users/itaybd/output_covid"
+	
 	if not os.path.isdir(output_path):
 	    os.mkdir(output_path)
 
 	DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
-	DFC.to_csv(os.path.join(output_path,"test_deathsM4confirmed_covid19.csv"),index_label="index")
+	DFC.to_csv(os.path.join(output_path,"test_deathsANDconfirmed_covid19_%s_%s.csv"%(last_data_date,git_commit_date)),index_label="index")
 	print("save time %0.2f"%(time.time() - start3))
 	###########################################################################
 	### USA ###
 	add_covid = max(list(dict_indexes.values()))+1
 
 
-	file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_US.csv"
+	file_name = os.path.join(orig_path,"csse_covid_19_data","csse_covid_19_time_series","time_series_covid19_deaths_US.csv")
 	col_name = "deaths"
 	lags = [1,7,14,28,56]
 	lags2 = [7,14,28]
@@ -58,7 +71,7 @@ def main_CovidFeatureGen():
 
 
 	DF7,dict_indexes2 = main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar=col_tar,add = add_covid,key_cols=key_cols2,key_cols_func=key_cols_func,dict_indexes=dict_indexes,prep_data=prep_data_dt_cols)
-	file_name = orig_path+"csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv"
+	file_name = os.path.join(orig_path,"csse_covid_19_data","csse_covid_19_time_series","time_series_covid19_confirmed_US.csv")
 	col_name = "confirmed"
 	col_tar = "confirmed"
 
@@ -72,7 +85,7 @@ def main_CovidFeatureGen():
 
 
 
-	DFC_complete.to_csv(os.path.join(output_path,"test_deathsNconfirmed_covid19_wUSM.csv"),index_label="index")
+	DFC_complete.to_csv(os.path.join(output_path,"test_deathsANDconfirmed_covid19_wUS_%s_%s.csv"%(last_data_date,last_git_commit_date)),index_label="index")
 
 
 	print("TOTAL including US %0.2f"%(time.time() - start_main))
@@ -101,13 +114,14 @@ def main_CovidFeatureGen():
 	    "groupby_column": "Country_Province"}
 	    )
 	DF_ind = pd.DataFrame(list(dict_indexes2.items()),columns=["index","val"])
-
+	DF_ind.to_csv("../index_%s_%s.csv"%(os.path.basename(__file__),inspect.stack()[0][3]))
 	return extd_feature_mixing(DFC_complete,varbs),DF_ind
 
 
 	
 	########################################################################################	
 if __name__ == "__main__":
+	main_CovidFeatureGen("/Users/itaybd/COVID-19")
 	exit(0)
 
 

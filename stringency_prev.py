@@ -8,7 +8,7 @@ import pandas as pd
 import re,os,sys
 from dateutil.parser import parse
 import time
-
+import inspect
 
 
 from collections import OrderedDict
@@ -89,9 +89,11 @@ def create_stringency_features(file_name,output_path,stringency_out_name):
     #for col_name in 
 
     output_path = "/Users/itaybd/output_covid"
-    DFC.to_csv(os.path.join(output_path,file_name+".csv"),index_label="index")
+    DFC.to_csv(os.path.join(output_path,stringency_out_name+".csv"),index_label="index")
     DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
-    DF_ind.to_csv(os.path.join(output_path,file_name+"_index.csv"),index=False)
+    DF_ind.to_csv(os.path.join(output_path,stringency_out_name+"_index.csv"),index=False)
+    DF_ind.to_csv("../index_%s_%s.csv"%(os.path.basename(__file__),inspect.stack()[0][3]))
+
     return DFC,DF_ind
 
 
