@@ -28,10 +28,15 @@ if __name__ == "__main__" :
 	stringency_time = time.time()-start_all-main_CovidFeatureGen_time
 	print("main_CovidFeatureGen_time is %0.2f"%main_CovidFeatureGen_time)
 	print("stringency_time is %0.2f"%stringency_time)
+	print("sample of index files")
+	print(df_indN.tail())
+	print(ind_strng.tail())
 	df_c,df_ind = integrate_frames(strng,ind_strng,df_complete,df_indN)
+	last_dt = "" 
 	#last_dt = df_ind["index"].max()[1]
-	df_c.to_csv(os.path.join(output_path,"Complete_git_%s.csv"%(last_commit_dt)))
-	#df_ind.to_csv(os.path.join(output_path,"Complete_index_git_%s_dt_%s.csv"%(last_commit_dt,last_dt)))
+
+	df_c.to_csv(os.path.join(output_path,"Complete_git_%s.csv"%(last_commit_dt)),index_label="index")
+	df_ind.to_csv(os.path.join(output_path,"Complete_index_git_%s_dt_%s.csv"%(last_commit_dt,last_dt)),index=False)
 	integrate_frames_time = time.time()-start_all-main_CovidFeatureGen_time - stringency_time
 	print("total time all is  %0.2f"%(time.time() - start_all))
 	print("main_CovidFeatureGen_time is %0.2f"%main_CovidFeatureGen_time)

@@ -92,8 +92,9 @@ def create_stringency_features(file_name,output_path,stringency_out_name):
     DFC.to_csv(os.path.join(output_path,stringency_out_name+".csv"),index_label="index")
     DF_ind = pd.DataFrame(list(dict_indexes.items()),columns=["index","val"])
     DF_ind.to_csv(os.path.join(output_path,stringency_out_name+"_index.csv"),index=False)
-    DF_ind.to_csv("../index_%s_%s.csv"%(os.path.basename(__file__),inspect.stack()[0][3]))
-
+    DF_ind.to_csv("../index_%s_%s.csv"%(os.path.basename(__file__),inspect.stack()[0][3]),index=False)
+    print("###DF_ind###",os.path.basename(__file__))
+    print(DF_ind.tail())
     return DFC,DF_ind
 
 

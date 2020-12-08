@@ -113,8 +113,11 @@ def main_CovidFeatureGen(covid_path,output_path = os.path.join(HOME,"output_covi
 	    "operators": operators_l,
 	    "groupby_column": "Country_Province"}
 	    )
-	DF_ind = pd.DataFrame(list(dict_indexes2.items()),columns=["index","val"])
-	DF_ind.to_csv("../index_%s_%s.csv"%(os.path.basename(__file__),inspect.stack()[0][3]))
+	DF_ind2 = pd.DataFrame(list(dict_indexes2.items()),columns=["index","val"])
+	DF_ind = pd.concat([DF_ind,DF_ind2],axis=0)
+	DF_ind.to_csv("../index_%s_%s.csv"%(os.path.basename(__file__),inspect.stack()[0][3]),index=False)
+	print("###DF_ind###",os.path.basename(__file__))
+	print(DF_ind.tail())
 	return extd_feature_mixing(DFC_complete,varbs),DF_ind
 
 
