@@ -26,21 +26,11 @@ def convert_dates(dt):
     spl = dt.split("/")
     return spl[2]+"-"+add_st(spl[0])+"-"+add_st(spl[1])
 """
-def convert_dates(dt):
+def convert_dates(dt,dayfirst=False):
     spl = parse(dt,dayfirst=False)
     return str(spl.year)+"-"+add_st(str(spl.month))+"-"+add_st(str(spl.day))
 
-"""
-def create_covid_coutry_date_DataFrame(file_name,country_col = 'Country/Region',province_col= 'Province/State'):
-    df = pd.read_csv(file_name)
-    df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
-    df = df.set_index("key")
-    df_mod = df[df.columns[start_col:]]
-    df_mod_t = df_mod.T
-    df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
-    DF_countries = {c:pd.DataFrame(df_mod_t[c]) for c in df_mod_t.columns}
-    return DF_countries
-"""
+
 
 
 def prepare_data_with_indexing(gf,column_rep,fix_index = False,add = 0):
@@ -91,34 +81,16 @@ def prep_data_dt_cols(file_name,col_name,key_cols,key_cols_func):
     return OrderedDict([ (c,pd.DataFrame(df_mod_t[c])) for c in df_mod_t.columns])
 
 
-def create_df_dict(file_name,col_name,key_cols,key_cols_func,prep_data,rep_indexes=False,dict_indexes={}):
-    """
-    df = pd.read_csv(file_name)
-    #df["key"] = df.apply(lambda r: str(r[country_col])+("_"+str(r[province_col])).replace("_nan",""),axis=1)
-    df["key"] = df.apply(lambda r: key_cols_func(key_cols)(r),axis=1)
-    #df1 = df.set_index("key")
-    df = df.groupby("key").sum()
-    date_cols = [c for c in df.columns if dates_expr(c)]  
-    print(date_cols[:10]) 
-    df_mod = df[date_cols]
-    df_mod_t = df_mod.T
-    df_mod_t.index = df_mod_t.apply(lambda r: convert_dates(r.name),axis=1 )
-    DF_countries = OrderedDict([ (c,pd.DataFrame(df_mod_t[c])) for c in df_mod_t.columns])
-    """
+def create_df_dict(file_name,col_name,key_cols,key_cols_func,prep_data,rep_indexes=False,dict_indexes={},prefix = "daily"):
+    
     DF_countries = prep_data(file_name,col_name,key_cols,key_cols_func)
     for c in DF_countries.keys():
         DF_countries[c] = DF_countries[c].rename(columns={c:col_name})
-        if col_name.find("daily") == -1:
-            #print("col_name is %s"%col_name)
-            #print(DF_countries[c][col_name].shape)
-            #print(DF_countries[c][col_name].tail())
-            #print(c)
-            #print(col_name)
-            #print(DF_countries[c][col_name].head())
-            #print([s for s in set(DF_countries[c][col_name]) if isinstance(s,str)])
+        if col_name.find(prefix) == -1:
+            
             DF_countries[c][col_name] = DF_countries[c][col_name].replace('.','0.0')
             DF_countries[c][col_name] = DF_countries[c][col_name].astype(float)
-            DF_countries[c]["daily_"+col_name] = DF_countries[c][col_name].diff(1).fillna(0)
+            DF_countries[c][prefix+col_name] = DF_countries[c][col_name].diff(1).fillna(0)
         DF_countries[c]["Date"] = DF_countries[c].index
         DF_countries[c]["Country_Province"] = c 
         if rep_indexes:
@@ -169,6 +141,11 @@ def divide(a,b):
     return a/b
 def mul(a,b):
     return a*b
+def cond(a,b):
+    if (a>0):
+        return b
+    else:
+        return 0
 
 #df[m1+o["name"]+m2] = o["func"](df[m1].values,df[m2].values)
 operators_l=[]
@@ -199,6 +176,19 @@ def from_gf_to_df(frame,gf,cols):
 
 
 from tqdm import tqdm
+
+def df_specific_generate_directional_features(df,func_dict,lags2):
+    func_dict_keys = list(func_dict.keys())
+    for func_name in tqdm(func_dict_keys):
+        params_d = func_dict[func_name]["params"].copy()
+        params_d["df"] = df
+
+        df[func_name] = func_dict[func_name]["func"](**params_d)
+        for lg2 in lags2:
+            df[func_name + "_lag_%d" % lg2] = df[func_name].shift(lg2)
+    
+
+
 def genetate_directional_features(frame,gf,func_dict,lags2):
     func_dict_keys = list(func_dict.keys())
     for func_name in tqdm(func_dict_keys): #func_dict.keys():
@@ -247,8 +237,6 @@ def feature_mixing(df, prefix1,prefix2, filter_strings1,filter_strings2,operator
 
 
 
-#def main_generator(file_name=file_name,col_name=col_name,lags=lags,lags2=lags2,col_tar="deaths",add=0,country_col=country_col,province_col=province_col,dict_indexes={}):
-#def main_generator(file_name,col_name,lags,lags2,col_tar,add,country_col,province_col,dict_indexes={}):
 def main_generator(file_name,col_name,lags,lags2,col_tar,add,key_cols,key_cols_func,prep_data,dict_indexes={},initialize_features_func_directional=initialize_features_func_directional):
 
     daily_col = "daily_"+col_tar
